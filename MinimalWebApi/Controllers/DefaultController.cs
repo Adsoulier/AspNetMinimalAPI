@@ -7,7 +7,7 @@ namespace MinimalWebApi.Controllers
     [Route("api")]
     public class DefaultController : ControllerBase
     {
-        private IEnumerable<Contact> _contacts =
+        private static List<Contact> _contacts =
             [
                 new Contact { Id = 1, Name = "John Doe", FistName = "John", Email = "oui@oui" },
                 new Contact { Id = 2, Name = "Jane Smith", FistName = "Jane", Email = "non@non" },
@@ -44,10 +44,20 @@ namespace MinimalWebApi.Controllers
                 return BadRequest("Invalid contact data.");
             }
             contact.Id = _contacts.Max(c => c.Id) + 1;
-            _contacts = _contacts.Append(contact);
+            _contacts.Add(contact);
             return CreatedAtAction(nameof(GetContact), new { id = contact.Id }, contact);
         }
 
+        [HttpDelete("contacts/{id:int}", Name = "DeleteContact")]
+        public ActionResult DeleteContact(int id)
+        {
+            if(!_contacts.Any(c => c.Id == id))
+            {
+                return NotFound();
+            }
+            _contacts.Remove(_contacts.First(c => c.Id == id));
+           return NoContent();
+        }
 
     }
 }
