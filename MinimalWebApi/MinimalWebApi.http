@@ -7,3 +7,21 @@
 GET {{MinimalWebApi_HostAddress}}/default
 
 ###
+
+GET {{MinimalWebApi_HostAddress}}/api/contacts
+
+###
+
+@id=0
+GET {{MinimalWebApi_HostAddress}}/api/contacts/{{id}}
+
+###
+
+POST {{MinimalWebApi_HostAddress}}/api/contacts
+Content-Type: application/json
+
+{
+  
+}
+
+###
