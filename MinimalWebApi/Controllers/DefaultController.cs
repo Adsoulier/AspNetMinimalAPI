@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using MinimalWebApi.Data;
 using MinimalWebApi.Models;
 
 namespace MinimalWebApi.Controllers
@@ -7,11 +8,21 @@ namespace MinimalWebApi.Controllers
     [Route("api")]
     public class DefaultController : ControllerBase
     {
-        private static List<Contact> _contacts =
-            [
+        private ContactsContext _context;
+
+
+        public DefaultController(ContactsContext context)
+        {
+            _context = context;
+            if (!_context.Contacts.Any())
+            {
+                _context.Contacts.AddRange([
                 new Contact { Id = 1, Name = "John Doe", FistName = "John", Email = "oui@oui" },
                 new Contact { Id = 2, Name = "Jane Smith", FistName = "Jane", Email = "non@non" },
-            ];
+            ]);
+                _context.SaveChanges();
+            }
+        }
 
         [HttpGet(Name = "AutomaticGet")]
         public string GetBaseString()
@@ -22,13 +33,13 @@ namespace MinimalWebApi.Controllers
         [HttpGet("contacts", Name = "GetContacts")]
         public IEnumerable<Contact> GetContacts()
         {
-            return _contacts;
+            return _context.Contacts;
         }
 
         [HttpGet("contacts/{id:int}", Name = "GetContactById")]
         public ActionResult<Contact> GetContact(int id)
         {
-            var contact = _contacts.FirstOrDefault(c => c.Id == id);
+            var contact = _context.Contacts.FirstOrDefault(c => c.Id == id);
             if (contact == null)
             {
                 return NotFound();
@@ -37,26 +48,28 @@ namespace MinimalWebApi.Controllers
         }
 
         [HttpPost("contacts", Name = "CreateContact")]
-        public ActionResult<Contact> CreateContact([FromBody] Contact contact)
+        public async Task<ActionResult<Contact>> CreateContact([FromBody] Contact contact)
         {
             if(contact == null || string.IsNullOrWhiteSpace(contact.Name) || string.IsNullOrWhiteSpace(contact.Email))
             {
                 return BadRequest("Invalid contact data.");
             }
-            contact.Id = _contacts.Max(c => c.Id) + 1;
-            _contacts.Add(contact);
+            contact.Id = _context.Contacts.Max(c => c.Id) + 1;
+            _context.Contacts.Add(contact);
+            await _context.SaveChangesAsync();
             return CreatedAtAction(nameof(GetContact), new { id = contact.Id }, contact);
         }
 
         [HttpDelete("contacts/{id:int}", Name = "DeleteContact")]
-        public ActionResult DeleteContact(int id)
+        public async Task<ActionResult> DeleteContact(int id)
         {
-            if(!_contacts.Any(c => c.Id == id))
+            if(!_context.Contacts.Any(c => c.Id == id))
             {
                 return NotFound();
             }
-            _contacts.Remove(_contacts.First(c => c.Id == id));
-           return NoContent();
+            _context.Contacts.Remove(_context.Contacts.First(c => c.Id == id));
+            await _context.SaveChangesAsync();
+            return NoContent();
         }
 
     }
