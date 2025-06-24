@@ -72,5 +72,24 @@ namespace MinimalWebApi.Controllers
             return NoContent();
         }
 
+        [HttpPut("contacts/{id:int}", Name = "UpdateContact")]
+        public async Task<ActionResult<Contact>> UpdateContact(int id, [FromBody] Contact updatedContact)
+        {
+            if(updatedContact == null || string.IsNullOrWhiteSpace(updatedContact.Name) || string.IsNullOrWhiteSpace(updatedContact.Email))
+            {
+                return BadRequest("Invalid contact data.");
+            }
+            var existingContact = _context.Contacts.FirstOrDefault(c => c.Id == id);
+            if (existingContact == null)
+            {
+                return NotFound();
+            }
+            existingContact.Name = updatedContact.Name;
+            existingContact.FistName = updatedContact.FistName;
+            existingContact.Email = updatedContact.Email;
+            await _context.SaveChangesAsync();
+            return Ok(existingContact);
+        }
+
     }
 }
