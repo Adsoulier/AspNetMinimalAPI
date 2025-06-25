@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MinimalWebApi.Data;
 using MinimalWebApi.Models;
+using MinimalWebApi.Services;
 
 namespace MinimalWebApi.Controllers
 {
@@ -8,20 +9,12 @@ namespace MinimalWebApi.Controllers
     [Route("api")]
     public class DefaultController : ControllerBase
     {
-        private ContactsContext _context;
+        private ContactService _service;
 
 
-        public DefaultController(ContactsContext context)
+        public DefaultController(ContactService service)
         {
-            _context = context;
-            if (!_context.Contacts.Any())
-            {
-                _context.Contacts.AddRange([
-                new Contact { Id = 1, Name = "John Doe", FistName = "John", Email = "oui@oui" },
-                new Contact { Id = 2, Name = "Jane Smith", FistName = "Jane", Email = "non@non" },
-            ]);
-                _context.SaveChanges();
-            }
+            _service = service;
         }
 
         [HttpGet(Name = "AutomaticGet")]
@@ -33,13 +26,13 @@ namespace MinimalWebApi.Controllers
         [HttpGet("contacts", Name = "GetContacts")]
         public IEnumerable<Contact> GetContacts()
         {
-            return _context.Contacts;
+            return _service.GetAllContacts();
         }
 
         [HttpGet("contacts/{id:int}", Name = "GetContactById")]
-        public ActionResult<Contact> GetContact(int id)
+        public async Task<ActionResult<Contact>> GetContact(int id)
         {
-            var contact = _context.Contacts.FirstOrDefault(c => c.Id == id);
+            var contact = await _service.GetContactByIdAsync(id);
             if (contact == null)
             {
                 return NotFound();
@@ -54,21 +47,23 @@ namespace MinimalWebApi.Controllers
             {
                 return BadRequest("Invalid contact data.");
             }
-            contact.Id = _context.Contacts.Max(c => c.Id) + 1;
-            _context.Contacts.Add(contact);
-            await _context.SaveChangesAsync();
+            contact.Id = _service.GetAllContacts().Max(c => c.Id) + 1;
+            await _service.CreateContactAsync(contact);
             return CreatedAtAction(nameof(GetContact), new { id = contact.Id }, contact);
         }
 
         [HttpDelete("contacts/{id:int}", Name = "DeleteContact")]
         public async Task<ActionResult> DeleteContact(int id)
         {
-            if(!_context.Contacts.Any(c => c.Id == id))
+            try
             {
-                return NotFound();
+                await _service.DeleteContactAsync(id);
             }
-            _context.Contacts.Remove(_context.Contacts.First(c => c.Id == id));
-            await _context.SaveChangesAsync();
+            catch (KeyNotFoundException)
+            {
+                return NotFound($"Contact with ID {id} not found.");
+            }
+
             return NoContent();
         }
 
@@ -79,7 +74,7 @@ namespace MinimalWebApi.Controllers
             {
                 return BadRequest("Invalid contact data.");
             }
-            var existingContact = _context.Contacts.FirstOrDefault(c => c.Id == id);
+            var existingContact = await _service.GetContactByIdAsync(id);
             if (existingContact == null)
             {
                 return NotFound();
@@ -87,7 +82,7 @@ namespace MinimalWebApi.Controllers
             existingContact.Name = updatedContact.Name;
             existingContact.FistName = updatedContact.FistName;
             existingContact.Email = updatedContact.Email;
-            await _context.SaveChangesAsync();
+            await _service.SaveChangesAsync();
             return Ok(existingContact);
         }
 

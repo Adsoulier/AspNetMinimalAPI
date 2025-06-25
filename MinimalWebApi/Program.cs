@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using MinimalWebApi.Data;
+using MinimalWebApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -7,6 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<ContactsContext>(options =>
         options.UseInMemoryDatabase("Contacts"));
 
+builder.Services.AddScoped<ContactService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
