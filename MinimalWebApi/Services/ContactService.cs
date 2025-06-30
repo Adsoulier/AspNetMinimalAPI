@@ -22,6 +22,7 @@ namespace MinimalWebApi.Services
 
         public IEnumerable<Contact> GetAllContacts()
         {
+            throw new Exception("My exception");
             return _context.Contacts.ToList();
         }
 
