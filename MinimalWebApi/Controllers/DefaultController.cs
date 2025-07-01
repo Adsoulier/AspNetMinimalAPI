@@ -18,9 +18,11 @@ namespace MinimalWebApi.Controllers
         }
 
         [HttpGet("contacts", Name = "GetContacts")]
-        public IEnumerable<Contact> GetContacts()
+        public IEnumerable<Contact> GetContacts(int page = 1, int pageSize = 10)
         {
-            return _service.GetAllContacts();
+            return _service.GetAllContacts()
+                .Skip((page - 1)*pageSize)
+                .Take(pageSize);
         }
 
         [HttpGet("contacts/{id:int}", Name = "GetContactById")]
