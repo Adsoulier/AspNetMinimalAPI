@@ -9,6 +9,7 @@ namespace MinimalWebApi.Models
         public string Name { get; set; }
         [Required]
         public string FistName { get; set; }
+
         [Required]
         [EmailAddress]
         public string Email { get; set; }

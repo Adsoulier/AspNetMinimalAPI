@@ -17,12 +17,6 @@ namespace MinimalWebApi.Controllers
             _service = service;
         }
 
-        [HttpGet(Name = "AutomaticGet")]
-        public string GetBaseString()
-        {
-            return "Hello, World! This is the default controller response.";
-        }
-
         [HttpGet("contacts", Name = "GetContacts")]
         public IEnumerable<Contact> GetContacts()
         {
@@ -43,10 +37,6 @@ namespace MinimalWebApi.Controllers
         [HttpPost("contacts", Name = "CreateContact")]
         public async Task<ActionResult<Contact>> CreateContact([FromBody] Contact contact)
         {
-            if(contact == null || string.IsNullOrWhiteSpace(contact.Name) || string.IsNullOrWhiteSpace(contact.Email))
-            {
-                return BadRequest("Invalid contact data.");
-            }
             contact.Id = _service.GetAllContacts().Max(c => c.Id) + 1;
             await _service.CreateContactAsync(contact);
             return CreatedAtAction(nameof(GetContact), new { id = contact.Id }, contact);
@@ -70,10 +60,6 @@ namespace MinimalWebApi.Controllers
         [HttpPut("contacts/{id:int}", Name = "UpdateContact")]
         public async Task<ActionResult<Contact>> UpdateContact(int id, [FromBody] Contact updatedContact)
         {
-            if(updatedContact == null || string.IsNullOrWhiteSpace(updatedContact.Name) || string.IsNullOrWhiteSpace(updatedContact.Email))
-            {
-                return BadRequest("Invalid contact data.");
-            }
             var existingContact = await _service.GetContactByIdAsync(id);
             if (existingContact == null)
             {
