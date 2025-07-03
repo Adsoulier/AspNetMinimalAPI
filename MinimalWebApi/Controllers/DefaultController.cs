@@ -18,11 +18,31 @@ namespace MinimalWebApi.Controllers
         }
 
         [HttpGet("contacts", Name = "GetContacts")]
-        public ActionResult<ApiResponse<IEnumerable<Contact>>> GetContacts(int page = 1, int pageSize = 10)
+        public ActionResult<ApiResponse<IEnumerable<Contact>>> GetContacts(int page = 1, int pageSize = 10, string sortBy="Id", string sortDir = "asc")
         {
             var sample = _service.GetAllContacts()
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize);
+
+            var isValidSort = typeof(Contact)
+                .GetProperties()
+                .Any(p => p.Name.Equals(sortBy));
+
+            if (!isValidSort)
+            {
+                return BadRequest("Invalid sortBy field.Accepted fields are Id,Email,Name");
+            }
+
+            if (sortDir == "desc")
+                {
+                    sample = sample.OrderByDescending(c => c.GetType().GetProperty(sortBy)?.GetValue(c, null));
+                }
+                else
+                {
+                    sample = sample.OrderBy(c => c.GetType().GetProperty(sortBy)?.GetValue(c, null));
+            }
+
+
             var testResponse = new ApiResponse<IEnumerable<Contact>>(sample, true);
             return Ok(testResponse);
         }
